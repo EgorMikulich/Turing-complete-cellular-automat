@@ -28,7 +28,7 @@ for i in range(9):
 #e - empty
 #l - lever
 #w - wire
-#n - NO element
+#n - NOR element
 #p - wire plus
 Mainmap = [['e' for i in range(MAP_HEIGHT)] for j in range(MAP_WIDTH)]
 #n - no rotation
@@ -237,4 +237,5 @@ while Game:
     DrawMap(Mainmap,Rotationmap,Condmap)
 
     pg.time.wait(100)
+
 
