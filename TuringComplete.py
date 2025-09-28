@@ -3,7 +3,7 @@ import pickle
 pg.init()
 screen = pg.display.set_mode((pg.display.Info().current_w, pg.display.Info().current_h))
 
-CELL_SIZE = 32 size of cells (default - 32)
+CELL_SIZE = 32 #size of cells (default - 32)
 MAP_WIDTH = 300
 MAP_HEIGHT = 300
 Map_StartX = 1 # Start draw map from this cord
@@ -237,3 +237,4 @@ while Game:
     DrawMap(Mainmap,Rotationmap,Condmap)
 
     pg.time.wait(100)
+
