@@ -3,13 +3,15 @@ import pickle
 pg.init()
 screen = pg.display.set_mode((pg.display.Info().current_w, pg.display.Info().current_h))
 
-CELL_SIZE = 32 #size of cells (default - 32)
+CELL_SIZE = 26
 MAP_WIDTH = 300
 MAP_HEIGHT = 300
 Map_StartX = 1 # Start draw map from this cord
 Map_StartY = 1 # Start draw map from this cord
 Map_ScaleX = pg.display.Info().current_w // CELL_SIZE + 1 # End draw map when this cord
 Map_ScaleY = pg.display.Info().current_h // CELL_SIZE + 1 # End draw map when this cord
+Copy_Cords = [0,0,1,1]
+Move = 1
 
 #import and tune sprites
 Sprites = [0,1,2,3,4,5,6,7,8]
@@ -43,7 +45,7 @@ Condmap = [['0' for i in range(MAP_HEIGHT)] for j in range(MAP_WIDTH)]
 UpdateCondmap = [['0' for i in range(MAP_HEIGHT)] for j in range(MAP_WIDTH)]
 
 # output function
-def DrawMap(Mainmap,Rotationmap,Condmap):
+def DrawMap():
     x,y = 0,0
     for i in range(Map_StartY,Map_ScaleY):
         for j in range(Map_StartX,Map_ScaleX):              
@@ -62,13 +64,13 @@ def DrawMap(Mainmap,Rotationmap,Condmap):
 
                 case _:
                     match Rotationmap[j][i]:
-                        case 'u':
-                            angle = 90
                         case 'd':
+                            angle = 90
+                        case 'u':
                             angle = 270
-                        case 'l':
+                        case 'r':
                             angle = 180
-                        case _:
+                        case 'l':
                             angle = 0
 
                     if Mainmap[j][i] == 'w':
@@ -82,6 +84,7 @@ def DrawMap(Mainmap,Rotationmap,Condmap):
 
 Game = True
 Solution = False
+clock = pg.time.Clock()
 # main cycle
 while Game:
     # modificate map     
@@ -99,53 +102,65 @@ while Game:
                             else:
                                 Condmap[x][y] = '0'
                     case pg.K_e:
-                        Mainmap[x][y] = 'e'
-                        Condmap[x][y] = '0'   
-                        Rotationmap[x][y] = 'n'
+                        Mainmap[x][y], Condmap[x][y], Rotationmap[x][y] = 'e', '0', 'n'
                     case pg.K_1:
-                        Mainmap[x][y] = 'l'
-                        Condmap[x][y] = '0'   
-                        Rotationmap[x][y] = 'n'
+                        Mainmap[x][y], Condmap[x][y], Rotationmap[x][y] = 'l', '0', 'n'
                     case pg.K_2:
-                        Mainmap[x][y] = 'w'                        
-                        Condmap[x][y] = '0'
-                        Rotationmap[x][y] = 'r'   
+                        Mainmap[x][y], Condmap[x][y], Rotationmap[x][y] = 'w', '0', 'l'   
                     case pg.K_3:
-                        Mainmap[x][y] = 'n'                      
-                        Condmap[x][y] = '1'
-                        Rotationmap[x][y] = 'n'
+                        Mainmap[x][y], Condmap[x][y], Rotationmap[x][y] = 'n', '1', 'n'
                     case pg.K_4:
-                        Mainmap[x][y] = 'p'                        
-                        Condmap[x][y] = '0'
-                        Rotationmap[x][y] = 'r'
+                        Mainmap[x][y], Condmap[x][y], Rotationmap[x][y] = 'p', '0', 'l'
                     case pg.K_a:
-                        Rotationmap[x][y] = 'r'
+                        if Mainmap[x][y] in ('w','p'):
+                            Rotationmap[x][y] = 'l'
                     case pg.K_d:
-                        Rotationmap[x][y] = 'l'
+                        if Mainmap[x][y] in ('w','p'):
+                            Rotationmap[x][y] = 'r'
                     case pg.K_s:
-                        Rotationmap[x][y] = 'u'
+                        if Mainmap[x][y] in ('w','p'):
+                            Rotationmap[x][y] = 'd'
                     case pg.K_w:
-                        Rotationmap[x][y] = 'd'
+                        if Mainmap[x][y] in ('w','p'):
+                            Rotationmap[x][y] = 'u'
                     case pg.K_RIGHT:
-                        if Map_ScaleX < MAP_WIDTH - 1:
-                            Map_ScaleX += 1
-                            Map_StartX += 1
+                        if Map_ScaleX + Move <= MAP_WIDTH - 1:
+                            Map_ScaleX, Map_StartX = Map_ScaleX + Move, Map_StartX + Move
                     case pg.K_LEFT:
-                        if Map_StartX > 1:
-                            Map_StartX -= 1
-                            Map_ScaleX -= 1
+                        if Map_StartX - Move >= 1:
+                            Map_StartX, Map_ScaleX = Map_StartX - Move, Map_ScaleX - Move
                     case pg.K_UP:
-                        if Map_StartY > 1:
-                            Map_ScaleY -= 1
-                            Map_StartY -= 1
+                        if Map_StartY - Move >= 1:
+                            Map_ScaleY, Map_StartY = Map_ScaleY - Move, Map_StartY - Move
                     case pg.K_DOWN:
-                        if Map_ScaleY < MAP_HEIGHT - 1:
-                            Map_ScaleY += 1
-                            Map_StartY += 1
+                        if Map_ScaleY + Move <= MAP_HEIGHT - 1:
+                            Map_ScaleY, Map_StartY = Map_ScaleY + Move, Map_StartY + Move
                     case pg.K_SPACE:
                         Solution = True
                     case pg.K_ESCAPE:
                         Game = False
+                    case pg.K_j:
+                        Copy_Cords[0] = x
+                        Copy_Cords[1] = y
+                    case pg.K_k:
+                        Copy_Cords[2] = x
+                        Copy_Cords[3] = y
+                    case pg.K_l:
+                        Counter_X = 0
+                        for i in range(Copy_Cords[0],Copy_Cords[2] + 1):
+                            Counter_Y = 0
+                            for j in range(Copy_Cords[1],Copy_Cords[3] + 1):
+                                Mainmap[x + Counter_X][y + Counter_Y] = Mainmap[i][j]
+                                Condmap[x + Counter_X][y + Counter_Y] = Condmap[i][j]
+                                Rotationmap[x + Counter_X][y + Counter_Y] = Rotationmap[i][j]
+                                Counter_Y += 1
+                            Counter_X += 1
+                    case pg.K_n:
+                        if Move > 1:
+                            Move -= 1
+                    case pg.K_m:
+                        if Move < 30:
+                            Move += 1
                     case pg.K_0:
                         with open(r"C:\\Users\\mikul\\Projects\\TuringData\\Saves\\Save_1\\main.pkl","wb") as m:
                             pickle.dump(Mainmap,m)
@@ -173,69 +188,24 @@ while Game:
 
         for y in range(1,MAP_HEIGHT - 1):
             for x in range(1,MAP_WIDTH - 1):
-                Check = 1
-                if Mainmap[x][y] == 'p':
-                    Check = 2
+                if Mainmap[x][y] != 'e':
+                    Check = 2 if Mainmap[x][y] == 'p' else 1
+                        
 
-                signalright = '0'
-                signalup = '0'
-                signalleft = '0'
-                signaldown = '0'
-                if Condmap[x + Check][y] == '1':
-                    match Mainmap[x + Check][y]:
-                        case 'l' | 'n':
-                            signalright = '1'
-                        case _: 
-                            if Rotationmap[x + Check][y] != 'r':
-                                signalright = '1'
+                    signals = {"r": '1' if Condmap[x + Check][y] == '1' and ((Mainmap[x + Check][y] in ('l','n')) or (Rotationmap[x + Check][y] != 'l')) else '0',
+                               "u": '1' if Condmap[x][y - Check] == '1' and ((Mainmap[x][y - Check] in ('l','n')) or (Rotationmap[x][y - Check] != 'd')) else '0',
+                               "l": '1' if Condmap[x - Check][y] == '1' and ((Mainmap[x - Check][y] in ('l','n')) or (Rotationmap[x - Check][y] != 'r')) else '0',
+                               "d": '1' if Condmap[x][y + Check] == '1' and ((Mainmap[x][y + Check] in ('l','n')) or (Rotationmap[x][y + Check] != 'u')) else '0'
+                               }
 
-                if Condmap[x][y - Check] == '1':
-                    match Mainmap[x][y - Check]:
-                        case 'l' | 'n':
-                            signalup = '1'
-                        case _:
-                            if Rotationmap[x][y - Check] != 'u':
-                                signalup = '1'
+                    if Mainmap[x][y] in ('w','p'):
+                        UpdateCondmap[x][y] = signals[Rotationmap[x][y]]
 
-                if Condmap[x - Check][y] == '1':
-                    match Mainmap[x - Check][y]:
-                        case 'l' | 'n':
-                            signalleft = '1'
-                        case _:
-                            if Rotationmap[x - Check][y] != 'l':
-                                signalleft = '1'
-
-                if Condmap[x][y + Check] == '1':
-                    match Mainmap[x][y + Check]:
-                        case 'l' | 'n':
-                            signaldown = '1'
-                        case _:
-                            if Rotationmap[x][y + Check] != 'd':
-                                signaldown = '1'
-
-
-                if Mainmap[x][y] == 'w' or Mainmap[x][y] == 'p':
-                    match Rotationmap[x][y]:
-                        case 'r':
-                            UpdateCondmap[x][y] = signalleft
-                        case 'u':
-                            UpdateCondmap[x][y] = signaldown
-                        case 'l':
-                            UpdateCondmap[x][y] = signalright
-                        case 'd':
-                            UpdateCondmap[x][y] = signalup
-
-                elif Mainmap[x][y] == 'n':
-                    if signalright == '1' or signalleft == '1' or signaldown == '1' or signalup == '1':
-                        UpdateCondmap[x][y] = '0'
-                    else:
-                        UpdateCondmap[x][y] = '1'
+                    elif Mainmap[x][y] == 'n':
+                        UpdateCondmap[x][y] = '0' if '1' in signals.values() else '1'
 
         for y in range(1,MAP_HEIGHT - 1):
             for x in range(1,MAP_WIDTH - 1):
                 Condmap[x][y] = UpdateCondmap[x][y]
-    DrawMap(Mainmap,Rotationmap,Condmap)
-
-    pg.time.wait(100)
-
-
+    DrawMap()
+    clock.tick(10)
